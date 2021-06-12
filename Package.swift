@@ -24,8 +24,8 @@ let package = Package(
             linkerSettings: [.linkedLibrary("c++")]),
         .binaryTarget(
             name: "ZXing",
-            url: "https://github.com/nnabeyang/zxing-cpp/releases/download/ios-v0.0.1/ZXing.xcframework.zip",
-            checksum: "3c7f15739219281d78f5eb47cafdfccb978321b1d24f898d968761a847545c91"),
+            url: "https://github.com/nnabeyang/zxing-cpp/releases/download/ios-v0.0.2/ZXing.xcframework.zip",
+            checksum: "ae6ce97c6ad85dcd2afad2ba034db09090bd4dcacf94807b12d1624ae722acf5"),
         .testTarget(
             name: "ZXingSwiftTests",
             dependencies: ["ZXingSwift"]),        
