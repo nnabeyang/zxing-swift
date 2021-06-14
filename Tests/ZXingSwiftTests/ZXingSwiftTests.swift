@@ -1,40 +1,49 @@
 import XCTest
+@testable import ZXingCpp
 @testable import ZXingSwift
 
 final class ZXingSwiftTests: XCTestCase {
     func testCode39_1() {
+        var v = ZXingResult()
         let img = UIImage(named: "code39_0", in: Bundle.module, compatibleWith: nil)
-        guard let result = ZXingSwift.readBarcode(img, hints: [(.CODE_39, 4), (.QR_CODE, 4)]) else {
+        if !readBarcode(img, &v, hints: [(.CODE_39, 4), (.QR_CODE, 4)]) {
             XCTFail()
             return
         }
-        XCTAssertEqual("1234", result.text)
-        XCTAssertEqual(.CODE_39, result.format)
+        XCTAssertEqual("1234", String(cString: &v.text.0))
+        XCTAssertEqual(.CODE_39, v.barcodeFormat())
     }
     
     func testWrongLength() {
+        var v = ZXingResult()
         let img = UIImage(named: "code39_0", in: Bundle.module, compatibleWith: nil)
-        let code = readBarcode(img, hints: [(.CODE_39, 5), (.QR_CODE, 4)])
-        XCTAssertNil(code)
+        if readBarcode(img, &v, hints: [(.CODE_39, 5), (.QR_CODE, 4)]) {
+            XCTFail()
+            return
+        }
+        XCTAssertEqual(4, v.length)
+        XCTAssertEqual("1234", String(cString: &v.text.0))
+        XCTAssertEqual(.CODE_39, v.barcodeFormat())
     }
     
     func testAnyLength() {
+        var v = ZXingResult()
         let hints: [(BarcodeFormat, Int?)] = [(.CODE_39, nil), (.QR_CODE, 10)]
         let img0 = UIImage(named: "code39_0", in: Bundle.module, compatibleWith: nil)
-        guard let result0 = readBarcode(img0, hints: hints) else {
+        if !readBarcode(img0, &v, hints: hints) {
             XCTFail()
             return
         }
-        XCTAssertEqual("1234", result0.text)
-        XCTAssertEqual(.CODE_39, result0.format)
+        XCTAssertEqual("1234",String(cString: &v.text.0))
+        XCTAssertEqual(.CODE_39, v.barcodeFormat())
         
         let img1 = UIImage(named: "code39_1", in: Bundle.module, compatibleWith: nil)
-        guard let result1 = readBarcode(img1, hints: hints) else {
+        if !readBarcode(img1, &v, hints: hints) {
             XCTFail()
             return
         }
-        XCTAssertEqual("12345678", result1.text)
-        XCTAssertEqual(.CODE_39, result1.format)
+        XCTAssertEqual("12345678",String(cString: &v.text.0))
+        XCTAssertEqual(.CODE_39, v.barcodeFormat())
     }
     
     func testBarcodeFormatOrOp() {

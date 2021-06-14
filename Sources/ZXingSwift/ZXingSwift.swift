@@ -33,75 +33,32 @@ public struct BarcodeFormat: Equatable {
     public static let UPC_EAN_EXTENSION = BarcodeFormat(rawValue: 1 << 16) //< UPC/EAN extension (1D). Not a stand-alone format.
 }
 
-public struct BarcodeResult {
-    public let format:BarcodeFormat
-    public let text: String
-}
-
-public func readBarcode(_ img:UIImage?, hints: [(BarcodeFormat, Int?)]) -> BarcodeResult? {
-    guard let img = img else { return nil }
-    guard let cgImg = img.cgImage else { return nil }
-    guard let data = img.bytes() else { return nil }
-    var fmt = BarcodeFormat.NONE
-    for hint in hints {
-        fmt |= hint.0
-    }
-    var v = ZXingCpp.ZXingResult()
-    let result = readBarCode(data, &v, width: cgImg.width, height: cgImg.height, format: fmt)
-    
-    if result.format.rawValue == 0 {
-        return nil
-    }
-    
-    guard let hint = (hints.filter { $0.0 == result.format}).first else {
-        return nil
-    }
-    
-    guard let length = hint.1 else {
-        return result
-    }
-    
-    if length == result.text.count {
-        return result
-    }
-    
-    return nil
-}
-
-public func readBarcode2(_ img:UIImage?, v: inout ZXingCpp.ZXingResult, hints: [(BarcodeFormat, Int?)]) {
-    guard let img = img else { return }
-    guard let cgImg = img.cgImage else { return }
-    guard let data = img.bytes() else { return }
+public func readBarcode(_ img:UIImage?,_ v: inout ZXingCpp.ZXingResult, hints: [(BarcodeFormat, Int?)]) -> Bool {
+    guard let img = img else { return false}
+    guard let cgImg = img.cgImage else { return false}
+    guard let data = img.bytes() else { return false}
     var fmt = BarcodeFormat.NONE
     for hint in hints {
         fmt |= hint.0
     }
     
-    let result = readBarCode(data, &v, width: cgImg.width, height: cgImg.height, format: fmt)
-    
-    if result.format == .NONE {
-        return
+    read_barcode(data, Int32(cgImg.width), Int32(cgImg.height), Int32(4), ZXingCpp.Format(fmt.rawValue), &v)
+    if v.format.rawValue == 0 {
+        return false
     }
     
-    guard let hint = (hints.filter { $0.0 == result.format}).first else {
-        return
+    guard let hint = (hints.filter { $0.0.rawValue == v.format.rawValue}).first else {
+        return false
     }
     
     guard let length = hint.1 else {
-        return
-    }
-    
-    if length == result.text.count {
-        return
-    }
-    
-    return
+        return true
+    }  
+    return length == v.length;
 }
 
-
-private  func readBarCode(_ data:UnsafePointer<UInt8>,_ v: inout ZXingCpp.ZXingResult, width: Int, height: Int, format: BarcodeFormat) -> BarcodeResult {
-    ZXingCpp.read_barcode(data, Int32(width), Int32(height), Int32(4), ZXingCpp.Format(format.rawValue), &v)
-    let code = String(cString: &v.text.0)
-    let format = BarcodeFormat(rawValue: v.format.rawValue)
-    return BarcodeResult(format: format, text: code)
+extension ZXingResult {
+    public func barcodeFormat() -> BarcodeFormat {
+        return BarcodeFormat(rawValue: format.rawValue)
+    }
 }
